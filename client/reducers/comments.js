@@ -1,39 +1,35 @@
-import React from 'react';
-import { Link } from 'react-router';
-import CSSTransitionGroup from 'react-addons-css-transition-group';
-
-const Photo = React.createClass({
-  render() {
-    const { post, i, comments } = this.props;
-    return (
-      <figure className="grid-figure">
-        <div className="grid-photo-wrap">
-          <Link to={`/view/${post.code}`}>
-            <img src={post.display_src} alt={post.caption} className="grid-photo" />
-          </Link>
-
-          <CSSTransitionGroup transitionName="like" transitionEnterTimeout={500} transitionLeaveTimeout={500}>
-            <span key={post.likes} className="likes-heart">{post.likes}</span>
-          </CSSTransitionGroup>
-
-        </div>
-
-        <figcaption>
-          <p>{post.caption}</p>
-          <div className="control-buttons">
-            <button onClick={this.props.increment.bind(null, i)} className="likes">&hearts; {post.likes}</button>
-            <Link className="button" to={`/view/${post.code}`}>
-              <span className="comment-count">
-                <span className="speech-bubble"></span>
-                {comments[post.code] ? comments[post.code].length : 0 }
-              </span>
-            </Link>
-          </div>
-        </figcaption>
-
-      </figure>
-    )
+function postComments(state = [], action) {
+  switch(action.type){
+    case 'ADD_COMMENT':
+      // return the new state with the new comment
+      return [...state,{
+        user: action.author,
+        text: action.comment
+      }];
+    case 'REMOVE_COMMENT':
+      // we need to return the new state without the deleted comment
+      return [
+        // from the start to the one we want to delete
+        ...state.slice(0,action.i),
+        // after the deleted one, to the end
+        ...state.slice(action.i + 1)
+      ]
+    default:
+      return state;
   }
-});
+  return state;
+}
 
-export default Photo;
+function comments(state = [], action) {
+  if(typeof action.postId !== 'undefined') {
+    return {
+      // take the current state
+      ...state,
+      // overwrite this post with a new one
+      [action.postId]: postComments(state[action.postId], action)
+    }
+  }
+  return state;
+}
+
+export default comments;
